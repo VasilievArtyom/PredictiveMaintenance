@@ -51,6 +51,7 @@ r_pvalues = np.zeros((10, 10))
 for i in range(0, 10):
 	for j in range(0, 10):
 		r[i, j], r_pvalues[i, j] = stats.pearsonr(T[:, i], T[:, j])
+print(r_pvalues)
 fig, ax = plt.subplots(figsize=(5, 5))
 im = ax.imshow(r)
 ax.set_xticks(np.arange(len(T_n_labels)))
