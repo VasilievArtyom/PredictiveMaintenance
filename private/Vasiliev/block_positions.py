@@ -34,7 +34,7 @@ for i in range(0, 10):
 	for j in range(0, 10):
 		r[i, j], r_pvalues[i, j] = stats.pearsonr(T[:, i], T[:, j])
 
-n_iterations = 1
+n_iterations = 10
 x = np.zeros((20, n_iterations))
 for it in range (0, n_iterations):
 	x0 = 10*np.random.rand(20,)
