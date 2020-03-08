@@ -17,6 +17,7 @@ strdatatype = np.dtype([('N', np.int_, (2,)), ('Time_Count', np.int_ ), ('Mode',
 						('T', np.float_, (10,)), ('S', np.bool_, (10,)), ('System_State', np.bool_ )])
 N, Time_Count, Mode, T, S, System_State = np.loadtxt(path.join(inpath, currentfile),
 	unpack=True, delimiter=';', skiprows=1, dtype=strdatatype)
+T_n_labels = [r'$T_1$', r'$T_2$', r'$T_3$', r'$T_4$', r'$T_5$', r'$T_6$', r'$T_7$', r'$T_8$', r'$T_9$', r'$T_{10}$']
 
 
 nlags=200
@@ -35,8 +36,8 @@ for i in range(0, 10):
 		facecolor='gainsboro', interpolate=True)
 	ax.bar(lags[1:], acf_vals[1:, i], color='crimson')
 	plt.grid()
-	plt.ylabel(r'$r_{\tau}$'+' for T'+str(i))
-	plt.xlabel(r'$n$')
+	plt.ylabel(r'$r_{\tau}$'+' for '+T_n_labels[i])
+	plt.xlabel(r'$\tau$')
 	ax.xaxis.grid(b=True, which='both')
 	ax.yaxis.grid(b=True, which='both')
 	plt.draw()
@@ -50,8 +51,7 @@ r_pvalues = np.zeros((10, 10))
 for i in range(0, 10):
 	for j in range(0, 10):
 		r[i, j], r_pvalues[i, j] = stats.pearsonr(T[:, i], T[:, j])
-T_n_labels = [r'$T_1$', r'$T_2$', r'$T_3$', r'$T_4$', r'$T_5$', r'$T_6$', r'$T_7$', r'$T_8$', r'$T_9$', r'$T_{10}$']
-fig, ax = plt.subplots(figsize=(10, 5))
+fig, ax = plt.subplots(figsize=(5, 5))
 im = ax.imshow(r)
 ax.set_xticks(np.arange(len(T_n_labels)))
 ax.set_yticks(np.arange(len(T_n_labels)))
