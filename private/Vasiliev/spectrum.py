@@ -32,7 +32,7 @@ for i in range(0, 10):
 	plt.xlabel(r'$\omega$')
 	ax.xaxis.grid(b=True, which='both')
 	ax.yaxis.grid(b=True, which='both')
-	plt.title(r'power spectral density explanation for '+T_n_labels[i])
+	plt.title(r'Spectral density estimation for '+T_n_labels[i])
 	plt.draw()
 	fig.savefig(path.join(outpath, "psd_T_{0}.png".format(i+1)))
 	plt.clf()

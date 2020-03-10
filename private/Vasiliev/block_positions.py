@@ -25,7 +25,7 @@ def pos_functional(_x, _r):
 	stat_value = 0.0;
 	for i in range(0, 10):
 		for j in range(0, i):
-			stat_value += np.abs(( (_x[i] - _x[j])**2 + (_x[i + 10] - _x[10 + j])**2 - ((1 - _r[i, j]))**2 ))
+			stat_value += np.abs( (_x[i] - _x[j])**2 + (_x[i + 10] - _x[10 + j])**2 - np.exp(((1 - _r[i, j]))**2) )
 	return stat_value
 
 r = np.zeros((10, 10))
@@ -34,10 +34,10 @@ for i in range(0, 10):
 	for j in range(0, 10):
 		r[i, j], r_pvalues[i, j] = stats.pearsonr(T[:, i], T[:, j])
 
-n_iterations = 10
+n_iterations = 1
 x = np.zeros((20, n_iterations))
 for it in range (0, n_iterations):
-	x0 = 10*np.random.rand(20,)
+	x0 = np.random.rand(20,)
 	res = minimize(pos_functional, x0, args=r, method='nelder-mead')
 	x[:, it] = res.x
 x_mean = np.mean(x, axis=1)
