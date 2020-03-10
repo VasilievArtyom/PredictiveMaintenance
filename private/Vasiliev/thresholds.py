@@ -24,11 +24,26 @@ upper_threshold = []
 lower_threshold = []
 
 for n in range(0, 10):
+	upper_threshold_perblock = []
+	lower_threshold_perblock = []
 	for t in range(1, len(T[:, n])):
 		if (S[t, n] and not S[t-1, n]):
 			lower_threshold.append(T[t, n])
+			lower_threshold_perblock.append(T[t, n])
 		if (not S[t, n] and S[t-1, n]):
 			upper_threshold.append(T[t, n])
+			upper_threshold_perblock.append(T[t, n])
+	upper_threshold_perblock = np.array(upper_threshold_perblock)
+	lower_threshold_perblock = np.array(lower_threshold_perblock)
+	upper_threshold_perblock_mean = np.mean(upper_threshold_perblock)
+	lower_threshold_perblock_mean = np.mean(lower_threshold_perblock)
+
+	upper_threshold_perblock_err = np.std(upper_threshold_perblock, ddof=1) / np.sqrt(len(upper_threshold_perblock))
+	lower_threshold_perblock_err = np.std(lower_threshold_perblock, ddof=1) / np.sqrt(len(lower_threshold_perblock))
+	print("#threshold \pm error per block"+str(n+1))
+	print(np.round(upper_threshold_perblock_mean, decimals=2), np.round(upper_threshold_perblock_err, decimals=2))
+	print(np.round(lower_threshold_perblock_mean, decimals=2), np.round(lower_threshold_perblock_err, decimals=2))
+
 upper_threshold = np.array(upper_threshold)
 lower_threshold = np.array(lower_threshold)
 

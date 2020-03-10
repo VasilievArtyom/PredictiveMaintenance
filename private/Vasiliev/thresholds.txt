@@ -1,3 +1,36 @@
 #threshold \pm error 
 61.55 0.06
 33.9 0.03
+#threshold \pm error per block1
+61.46 0.17
+33.83 0.13
+#threshold \pm error per block2
+61.72 0.22
+33.91 0.11
+#threshold \pm error per block3
+61.25 0.17
+33.86 0.11
+#threshold \pm error per block4
+61.88 0.23
+34.01 0.09
+#threshold \pm error per block5
+61.53 0.18
+33.87 0.1
+#threshold \pm error per block6
+61.77 0.2
+34.11 0.1
+#threshold \pm error per block7
+61.81 0.21
+33.74 0.12
+#threshold \pm error per block8
+61.53 0.21
+34.01 0.11
+#threshold \pm error per block9
+61.34 0.15
+33.9 0.12
+#threshold \pm error per block10
+61.28 0.14
+33.77 0.11
+#threshold \pm error 
+61.55 0.06
+33.9 0.03
