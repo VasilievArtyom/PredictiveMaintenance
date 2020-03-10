@@ -1,6 +1,3 @@
-#threshold \pm error 
-61.55 0.06
-33.9 0.03
 #threshold \pm error per block1
 61.46 0.17
 33.83 0.13
