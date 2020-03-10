@@ -20,22 +20,21 @@ N, Time_Count, Mode, T, S, System_State = np.loadtxt(path.join(inpath, currentfi
 B_n_labels = [r'$B_1$', r'$B_2$', r'$B_3$', r'$B_4$', r'$B_5$', r'$B_6$', r'$B_7$', r'$B_8$', r'$B_9$', r'$B_{10}$']
 
 
-
+failure = np.sum(np.invert(S).astype(int), axis=0)
 
 
 # Draw acf plots
-outpath = "../../plots/acf"
-for i in range(0, 10):
-	fig, ax = plt.subplots(figsize=(8, 3.8))
-	ax.fill_between(lags[1:], confit_vals[1:, 0, i], confit_vals[1:, 1, i], 
-		facecolor='gainsboro', interpolate=True)
-	ax.bar(lags[1:], acf_vals[1:, i], color='crimson')
-	plt.grid()
-	plt.ylabel(r'$r_{\tau}$'+' for '+T_n_labels[i])
-	plt.xlabel(r'$\tau$')
-	ax.xaxis.grid(b=True, which='both')
-	ax.yaxis.grid(b=True, which='both')
-	plt.tight_layout()
-	plt.draw()
-	fig.savefig(path.join(outpath, "ACF_T_{0}.png".format(i+1)))
-	plt.clf()
+outpath = "../../plots/stat"
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.bar(np.arange(10), failure, color='crimson')
+plt.grid(which='both', axis='y')
+plt.ylabel(r'Failures per block count in time samples')
+
+ax.set_xticks(np.arange(len(B_n_labels)))
+ax.set_xticklabels(B_n_labels)
+plt.tight_layout()
+plt.draw()
+fig.savefig(path.join(outpath, "FailurePerBlock.png"))
+plt.clf()
+
