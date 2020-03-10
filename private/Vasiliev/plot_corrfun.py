@@ -31,7 +31,7 @@ lags=np.arange(1, nlags+1, 1)
 # Draw acf plots
 outpath = "../../plots/acf"
 for i in range(0, 10):
-	fig, ax = plt.subplots(figsize=(10, 5))
+	fig, ax = plt.subplots(figsize=(8, 3.8))
 	ax.fill_between(lags[1:], confit_vals[1:, 0, i], confit_vals[1:, 1, i], 
 		facecolor='gainsboro', interpolate=True)
 	ax.bar(lags[1:], acf_vals[1:, i], color='crimson')
@@ -40,6 +40,7 @@ for i in range(0, 10):
 	plt.xlabel(r'$\tau$')
 	ax.xaxis.grid(b=True, which='both')
 	ax.yaxis.grid(b=True, which='both')
+	plt.tight_layout()
 	plt.draw()
 	fig.savefig(path.join(outpath, "ACF_T_{0}.png".format(i+1)))
 	plt.clf()
