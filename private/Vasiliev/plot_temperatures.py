@@ -26,6 +26,7 @@ T_n_labels = [r'$T_1$', r'$T_2$', r'$T_3$', r'$T_4$', r'$T_5$', r'$T_6$', r'$T_7
 for i in range(0, 10):
 	fig, ax = plt.subplots(figsize=(10, 5))
 	colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+	# colors = ['b', 'w', 'w', 'w', 'w', 'w', 'w']
 	maxval = np.amax(T[:, i])
 	minval = np.amin(T[:, i])
 	dif = maxval - minval
@@ -52,6 +53,7 @@ for i in range(0, 10):
 for i in range(0, 10):
 	fig, ax = plt.subplots(figsize=(10, 5))
 	colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+	# colors = ['b', 'w', 'w', 'w', 'w', 'w', 'w']
 	maxval = np.amax(T[:, i])
 	minval = np.amin(T[:, i])
 	dif = maxval - minval
