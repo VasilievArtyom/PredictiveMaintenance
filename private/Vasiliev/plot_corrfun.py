@@ -31,7 +31,7 @@ lags=np.arange(1, nlags+1, 1)
 # Draw acf plots
 outpath = "../../plots/acf"
 for i in range(0, 10):
-	fig, ax = plt.subplots(figsize=(10, 5))
+	fig, ax = plt.subplots(figsize=(10, 3.5))
 	ax.fill_between(lags[1:], confit_vals[1:, 0, i], confit_vals[1:, 1, i], 
 		facecolor='gainsboro', interpolate=True)
 	ax.bar(lags[1:], acf_vals[1:, i], color='crimson')
@@ -53,7 +53,7 @@ for i in range(0, 10):
 	for j in range(0, 10):
 		r[i, j], r_pvalues[i, j] = stats.pearsonr(T[:, i], T[:, j])
 print(r_pvalues)
-fig, ax = plt.subplots(figsize=(8, 8))
+fig, ax = plt.subplots(figsize=(6, 6))
 im = ax.imshow(r)
 ax.set_xticks(np.arange(len(T_n_labels)))
 ax.set_yticks(np.arange(len(T_n_labels)))
