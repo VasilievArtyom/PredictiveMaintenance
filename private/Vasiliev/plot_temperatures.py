@@ -76,3 +76,107 @@ for i in range(0, 10):
 	plt.draw()
 	fig.savefig(path.join(outpath, "T_{0}_raw_tail.png".format(i+1)))
 	plt.clf()
+
+
+
+fig, ax = plt.subplots(figsize=(10, 5))
+colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+meanT = np.mean(T, axis=1)
+maxval = np.amax(meanT)
+minval = np.amin(meanT)
+dif = maxval - minval
+for pnt in range(0, np.size(N[:,0])):
+	ax.scatter(N[pnt,0], meanT[pnt], marker='.', color=colors[Mode[pnt]])
+crushflag = np.invert(System_State[:])
+crushflag = crushflag.astype(int)
+ax.fill_between(N[:,0], minval, minval + dif * crushflag,
+               facecolor='maroon',
+               interpolate=True,
+               zorder=0,
+               alpha=0.1)
+plt.grid()
+plt.ylabel(r'$\overline{T}$')
+plt.xlabel(r'$n$')
+ax.xaxis.grid(b=True, which='both')
+ax.yaxis.grid(b=True, which='both')
+plt.tight_layout()
+plt.draw()
+fig.savefig(path.join(outpath, "T_mean.png"))
+plt.clf()
+
+
+fig, ax = plt.subplots(figsize=(10, 5))
+colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+meanT = np.amax(T, axis=1)
+maxval = np.amax(meanT)
+minval = np.amin(meanT)
+dif = maxval - minval
+for pnt in range(0, np.size(N[:,0])):
+	ax.scatter(N[pnt,0], meanT[pnt], marker='.', color=colors[Mode[pnt]])
+crushflag = np.invert(System_State[:])
+crushflag = crushflag.astype(int)
+ax.fill_between(N[:,0], minval, minval + dif * crushflag,
+               facecolor='maroon',
+               interpolate=True,
+               zorder=0,
+               alpha=0.1)
+plt.grid()
+plt.ylabel(r'$T^{(max)}$')
+plt.xlabel(r'$n$')
+ax.xaxis.grid(b=True, which='both')
+ax.yaxis.grid(b=True, which='both')
+plt.tight_layout()
+plt.draw()
+fig.savefig(path.join(outpath, "T_max_per_block.png"))
+plt.clf()
+
+
+fig, ax = plt.subplots(figsize=(10, 5))
+colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+meanT = np.amin(T, axis=1)
+maxval = np.amax(meanT)
+minval = np.amin(meanT)
+dif = maxval - minval
+for pnt in range(0, np.size(N[:,0])):
+	ax.scatter(N[pnt,0], meanT[pnt], marker='.', color=colors[Mode[pnt]])
+crushflag = np.invert(System_State[:])
+crushflag = crushflag.astype(int)
+ax.fill_between(N[:,0], minval, minval + dif * crushflag,
+               facecolor='maroon',
+               interpolate=True,
+               zorder=0,
+               alpha=0.1)
+plt.grid()
+plt.ylabel(r'$T^{(min)}$')
+plt.xlabel(r'$n$')
+ax.xaxis.grid(b=True, which='both')
+ax.yaxis.grid(b=True, which='both')
+plt.tight_layout()
+plt.draw()
+fig.savefig(path.join(outpath, "T_min_per_block.png"))
+plt.clf()
+
+fig, ax = plt.subplots(figsize=(10, 5))
+colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+meanT = np.amax(T, axis=1) - np.amin(T, axis=1)
+maxval = np.amax(meanT)
+minval = np.amin(meanT)
+dif = maxval - minval
+for pnt in range(0, np.size(N[:,0])):
+	ax.scatter(N[pnt,0], meanT[pnt], marker='.', color=colors[Mode[pnt]])
+crushflag = np.invert(System_State[:])
+crushflag = crushflag.astype(int)
+ax.fill_between(N[:,0], minval, minval + dif * crushflag,
+               facecolor='maroon',
+               interpolate=True,
+               zorder=0,
+               alpha=0.1)
+plt.grid()
+plt.ylabel(r'$T^{(max)} - T^{(min)}$')
+plt.xlabel(r'$n$')
+ax.xaxis.grid(b=True, which='both')
+ax.yaxis.grid(b=True, which='both')
+plt.tight_layout()
+plt.draw()
+fig.savefig(path.join(outpath, "T_diff.png"))
+plt.clf()
