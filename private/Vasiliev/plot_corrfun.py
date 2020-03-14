@@ -71,7 +71,7 @@ for i in range(0, 10):
         text = ax.text(j, i, np.round(r[i, j],2),
                        ha="center", va="center", color="w")
 
-ax.set_title("Pearson correlation coefficient")
+# ax.set_title("Pearson correlation coefficient")
 fig.tight_layout()
 plt.draw()
 fig.savefig(path.join(outpath, "pcc.png"))
