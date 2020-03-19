@@ -26,7 +26,7 @@ outpath = "../../plots/mode"
 
 colors=['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
 for currentMode in range(0, 5):
-	fig, ax = plt.subplots(figsize=(10, 5))
+	fig, ax = plt.subplots(figsize=(2, 5))
 	Tvals = np.empty(10)
 	difTvals = np.empty(10)
 	for i in range(0, (np.size(Mode)-1)): 
@@ -40,7 +40,6 @@ for currentMode in range(0, 5):
 	plt.ylabel(r'$T_n$')
 	plt.xlabel(r'$\triangle T_n$')
 	plt.ylim(-3, 63)
-	plt.xlim(-20, 50)
 	ax.xaxis.grid(b=True, which='both')
 	ax.yaxis.grid(b=True, which='both')
 	plt.tight_layout()
@@ -49,48 +48,34 @@ for currentMode in range(0, 5):
 	plt.clf()
 
 
-# for i in range(0, (np.size(Mode)-1)):
-	# Tn = T[i,:]
-	# difTn = T[i+1,:] - T[i,:]
-	# print(Mode[i])
-	# ModeBlockTdivT[Mode[i]] = np.append(ModeBlockTdivT[Mode[i]], Tn, difTn)
+for currentMode in range(0, 5):
+	fig, ax = plt.subplots(figsize=(2, 5))
+	Tvals = np.empty(10)
+	difTvals = np.empty(10)
+	for i in range(0, (np.size(Mode)-1)): 
+		if (currentMode == Mode[i]):
+			Tvals = np.vstack((Tvals, T[i,:]))
+			difTvals = np.vstack((difTvals, T[i+1,:] - T[i,:]))
 
-# fig, ax = plt.subplots(figsize=(10, 3))
-# ax.bar(np.arange(10), failure, color='crimson')
-# plt.grid(which='both', axis='y')
-# plt.ylabel(r'Failures per block count in time samples')
-# ax.set_xticks(np.arange(len(B_n_labels)))
-# ax.set_xticklabels(B_n_labels)
-# plt.tight_layout()
-# plt.draw()
-# fig.savefig(path.join(outpath, "FailurePerBlock.png"))
-# plt.clf()
+	avrgTvals = np.mean(Tvals, axis=1)
+	avrgdifTvals = np.mean(difTvals, axis=1)
 
-# fr=0
-# fig, ax = plt.subplots(figsize=(5, 5))
-# # ax.plot(N[-100:,0], Mode[-100:], marker='x', ls='-', color='m', label='Mode')
-# ax.bar(N[fr:,0], failure_over_time[fr:], color='crimson', label='failure count')
-# plt.grid()
-# # plt.ylabel(r'$|\ddot{T^{(max)}}|$')
-# plt.xlabel(r'$n$')
-# ax.xaxis.grid(b=True, which='both')
-# ax.yaxis.grid(b=True, which='major')
-# ax.legend(loc='best', frameon=True)
-# plt.tight_layout()
-# plt.draw()
-# fig.savefig(path.join(outpath, "failure_over_time.png"))
-# plt.clf()
+	avrgTvalsErr = np.zeros(np.size(Tvals[:,0]))
+	avrgdifTvalsErr = np.zeros(np.size(difTvals[:,0]))
 
-# fig, ax = plt.subplots(figsize=(5, 5))
-# ax.bar(N[fr:,0], Mode[fr:].astype(int), color='m', label='Mode')
-# # ax.plot(N[-100:,0], failure_over_time[-100:], marker='.', ls='-', color='crimson', label='failure count')
-# plt.grid()
-# # plt.ylabel(r'$|\ddot{T^{(max)}}|$')
-# plt.xlabel(r'$n$')
-# ax.xaxis.grid(b=True, which='both')
-# ax.yaxis.grid(b=True, which='major')
-# ax.legend(loc='best', frameon=True)
-# plt.tight_layout()
-# plt.draw()
-# fig.savefig(path.join(outpath, "mode_over_time.png"))
-# plt.clf()
+	for tmp in range(0, np.size(Tvals[:,0])):
+		avrgTvalsErr[tmp] = np.std(Tvals[tmp, :])
+		avrgdifTvalsErr[tmp] = np.std(difTvals[tmp, :])
+	ax.errorbar(avrgdifTvals, avrgdifTvals, xerr=avrgdifTvalsErr, yerr=avrgdifTvalsErr, fmt='.', marker='.', capsize=5, capthick=1, ecolor='black', color='r')
+	plt.grid()
+	plt.title(r'Mode='+str(currentMode))
+	plt.ylabel(r'$T_n$')
+	plt.xlabel(r'$\triangle T_n$')
+	plt.ylim(-3, 63)
+	plt.xlim(-5, 53)
+	ax.xaxis.grid(b=True, which='both')
+	ax.yaxis.grid(b=True, which='both')
+	plt.tight_layout()
+	plt.draw()
+	fig.savefig(path.join(outpath, "avrgdeltaToverTforMode_{0}.png".format(currentMode)))
+	plt.clf()
