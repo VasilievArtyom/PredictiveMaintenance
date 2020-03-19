@@ -27,19 +27,30 @@ outpath = "../../plots/mode"
 colors=['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
 for currentMode in range(0, 5):
 	fig, ax = plt.subplots(figsize=(2, 5))
-	Tvals = np.empty(10)
-	difTvals = np.empty(10)
-	for i in range(0, (np.size(Mode)-1)): 
+	Tvals = np.zeros(10)
+	difTvals = np.zeros(10)
+	# print("######################################################")
+	# print(currentMode)
+	# print("######################################################")
+	for i in range(0, (np.size(Mode))-1): 
 		if (currentMode == Mode[i]):
 			Tvals = np.vstack((Tvals, T[i,:]))
+			# print(difTvals)
 			difTvals = np.vstack((difTvals, T[i+1,:] - T[i,:]))
+			# print(currentMode, np.round(np.abs(T[i+1,0] - T[i,0]), decimals=1))
+			# print(currentMode, np.round(Tvals[:, 0], decimals=1))
+	# print(currentMode, np.round(Tvals[:, 0], decimals=1))
+	difTvals = difTvals[1:,:]
+	Tvals = Tvals[1:,:]
+	# print(currentMode, np.round(Tvals[:, 0], decimals=1))
 	for block in range(0, 10):
 		ax.scatter(difTvals[block,:], Tvals[block,:], marker='o', color=colors[block])
 	plt.grid()
 	plt.title(r'Mode='+str(currentMode))
 	plt.ylabel(r'$T_n$')
 	plt.xlabel(r'$\triangle T_n$')
-	plt.ylim(-3, 63)
+	plt.ylim(20, 70)
+	plt.xlim(-8, 8)
 	ax.xaxis.grid(b=True, which='both')
 	ax.yaxis.grid(b=True, which='both')
 	plt.tight_layout()
@@ -50,12 +61,14 @@ for currentMode in range(0, 5):
 
 for currentMode in range(0, 5):
 	fig, ax = plt.subplots(figsize=(2, 5))
-	Tvals = np.empty(10)
-	difTvals = np.empty(10)
+	Tvals = np.zeros(10)
+	difTvals = np.zeros(10)
 	for i in range(0, (np.size(Mode)-1)): 
 		if (currentMode == Mode[i]):
 			Tvals = np.vstack((Tvals, T[i,:]))
 			difTvals = np.vstack((difTvals, T[i+1,:] - T[i,:]))
+	difTvals = difTvals[1:,:]
+	Tvals = Tvals[1:,:]
 
 	avrgTvals = np.mean(Tvals, axis=1)
 	avrgdifTvals = np.mean(difTvals, axis=1)
@@ -71,8 +84,8 @@ for currentMode in range(0, 5):
 	plt.title(r'Mode='+str(currentMode))
 	plt.ylabel(r'$T_n$')
 	plt.xlabel(r'$\triangle T_n$')
-	plt.ylim(-3, 65)
-	plt.xlim(-5, 55)
+	plt.ylim(20, 70)
+	plt.xlim(-5, 15)
 	ax.xaxis.grid(b=True, which='both')
 	ax.yaxis.grid(b=True, which='both')
 	plt.tight_layout()
