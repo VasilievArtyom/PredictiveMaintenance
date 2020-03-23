@@ -25,24 +25,25 @@ N, Time_Count, Mode, T, S, System_State = np.loadtxt(path.join(inpath, currentfi
 
 
 # fit model
-p = q = range(0, 47)
+p = range(0, 10)
+q = range(0, 10)
 d = [0]
 pdq = list(itertools.product(p, d, q))
 warnings.filterwarnings("ignore")
-f = open('hyperparam.txt','w') 
 for param in pdq:
 	try:
 		print("###############################")
 		print(param)
 		print("###############################")
+		prm = np.array(param)
 		model = sm.tsa.statespace.SARIMAX(T[:,0],
-										  order=param,
-										  seasonal_order=(0,0,0, 48),
+										  order=(15, 0, 5),
+										  seasonal_order=(prm[0], prm[1], prm[3], 48),
 										  enforce_stationarity=False,
 										  enforce_invertibility=False)
 		results = model.fit()
 		f = open('hyperparam.txt','a+') 
-		print('ARIMA{} - AIC:{}'.format(param, results.aic), file=f)
+		print('SARIMA{} - AIC:{}'.format(param, results.aic), file=f)
 		f.close()
 	except:
 		continue
