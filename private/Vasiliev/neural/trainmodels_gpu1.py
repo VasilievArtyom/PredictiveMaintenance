@@ -124,7 +124,7 @@ def read_dtaset_by_index(index):
 # Read unaugmented dataset
 N, Mode, T, kalmanT, ma2T, ma3T, ma5T, ma8T, ma13T = read_dtaset_by_index(0)
 # Read agmntCount augmented copies and collect full dataset
-agmntCount = 5000
+agmntCount = 500
 # In order to have shifted and unsifted series with same shape
 t = cutFromTail + predictSteps
 
@@ -220,7 +220,7 @@ def batch_generator_validation(batch_size, sequence_length):
 
 
 # ###################### Main #########################################
-for outputBlockId in range(0, 5):
+for outputBlockId in range(7, 10):
     outData_train = np.expand_dims(shifted_dataset[:, 0:num_train, outputBlockId], axis=2)
     outData_test = np.expand_dims(shifted_dataset[:, num_train:, outputBlockId], axis=2)
 
@@ -249,7 +249,7 @@ for outputBlockId in range(0, 5):
                                            verbose=1)
     callbacks = [callback_early_stopping, callback_checkpoint, callback_reduce_lr]
 
-    model.fit_generator(generator=generator_traindata, epochs=1000000, steps_per_epoch=57692, validation_steps=10,
+    model.fit_generator(generator=generator_traindata, epochs=1000000, steps_per_epoch=5769, validation_steps=10,
                         validation_data=generator_validdata, callbacks=callbacks)
 
     try:
