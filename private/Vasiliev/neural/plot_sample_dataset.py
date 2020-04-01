@@ -12,7 +12,7 @@ plt.rc('text', usetex=True)
 inpath = "data/"
 outpath = ""
 
-currentfile = "data_T_4"
+currentfile = "data_T_0"
 
 # Read from file
 strdatatype = np.dtype([('N', np.int_), ('Mode', np.float_ ),
@@ -36,9 +36,9 @@ print(np.amax(ma13T), np.amin(ma13T), np.mean(ma13T))
 print(np.amax(Mode), np.amin(Mode), np.mean(Mode))
 
 B_n_labels = [r'$B_1$', r'$B_2$', r'$B_3$', r'$B_4$', r'$B_5$', r'$B_6$', r'$B_7$', r'$B_8$', r'$B_9$', r'$B_{10}$']
-print_last_tmstms = 180
+print_last_tmstms = 100
 fontsize = 13
-fig, ax = plt.subplots(nrows=10, ncols=7, constrained_layout=True, figsize=(20, 10))
+fig, ax = plt.subplots(nrows=10, ncols=7, constrained_layout=True, figsize=(10, 15))
 for blc_id in range(0, 10):
 	ax[blc_id][0].grid(b=True, which='both')
 	ax[blc_id][0].plot(N[-print_last_tmstms:], T[-print_last_tmstms:, blc_id])
@@ -62,13 +62,20 @@ for blc_id in range(0, 10):
 	ax[blc_id][6].grid(b=True, which='both')
 	ax[blc_id][6].plot(N[-print_last_tmstms:], ma13T[-print_last_tmstms:, blc_id])
 
-ax[0][0].set_title('RAW', fontsize=fontsize)
-ax[0][1].set_title('Kalman filter', fontsize=fontsize)
-ax[0][2].set_title('ma on 2 timestamps', fontsize=fontsize)
-ax[0][3].set_title('ma on 3 timestamps', fontsize=fontsize)
-ax[0][4].set_title('ma on 5 timestamps', fontsize=fontsize)
-ax[0][5].set_title('ma on 8 timestamps', fontsize=fontsize)
-ax[0][6].set_title('ma on 13 timestamps', fontsize=fontsize)
+ax[0][0].set_title(r'RAW', fontsize=fontsize)
+ax[0][1].set_title(r'Kalman filter', fontsize=fontsize)
+ax[0][2].set_title(r'${MA}(2)$', fontsize=fontsize)
+ax[0][3].set_title(r'${MA}(3)$', fontsize=fontsize)
+ax[0][4].set_title(r'${MA}(5)$', fontsize=fontsize)
+ax[0][5].set_title(r'${MA}(8)$', fontsize=fontsize)
+ax[0][6].set_title(r'${MA}(13)$', fontsize=fontsize)
+ax[9][0].set_xlabel(r'$n$', fontsize=fontsize)
+ax[9][1].set_xlabel(r'$n$', fontsize=fontsize)
+ax[9][2].set_xlabel(r'$n$', fontsize=fontsize)
+ax[9][3].set_xlabel(r'$n$', fontsize=fontsize)
+ax[9][4].set_xlabel(r'$n$', fontsize=fontsize)
+ax[9][5].set_xlabel(r'$n$', fontsize=fontsize)
+ax[9][6].set_xlabel(r'$n$', fontsize=fontsize)
 plt.tight_layout()
 plt.draw()
 fig.savefig(path.join(outpath, currentfile+".png"))
