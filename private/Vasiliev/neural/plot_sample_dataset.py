@@ -12,7 +12,7 @@ plt.rc('text', usetex=True)
 inpath = "data/"
 outpath = ""
 
-currentfile = "data_T_0.csv"
+currentfile = "data_T_4"
 
 # Read from file
 strdatatype = np.dtype([('N', np.int_), ('Mode', np.float_ ),
@@ -23,7 +23,7 @@ strdatatype = np.dtype([('N', np.int_), ('Mode', np.float_ ),
                         ('ma5T', np.float_, (10,)),
                         ('ma8T', np.float_, (10,)),
                         ('ma13T', np.float_, (10,))])
-N, Mode, T, kalmanT, ma2T, ma3T, ma5T, ma8T, ma13T = np.loadtxt(path.join(inpath, currentfile), 
+N, Mode, T, kalmanT, ma2T, ma3T, ma5T, ma8T, ma13T = np.loadtxt(path.join(inpath, currentfile + ".csv"), 
                                                      unpack=True, delimiter=';', skiprows=1, dtype=strdatatype)
 
 print(np.amax(T), np.amin(T), np.mean(T))
@@ -34,4 +34,43 @@ print(np.amax(ma5T), np.amin(ma5T), np.mean(ma5T))
 print(np.amax(ma8T), np.amin(ma8T), np.mean(ma8T))
 print(np.amax(ma13T), np.amin(ma13T), np.mean(ma13T))
 print(np.amax(Mode), np.amin(Mode), np.mean(Mode))
+
+B_n_labels = [r'$B_1$', r'$B_2$', r'$B_3$', r'$B_4$', r'$B_5$', r'$B_6$', r'$B_7$', r'$B_8$', r'$B_9$', r'$B_{10}$']
+print_last_tmstms = 180
+fontsize = 13
+fig, ax = plt.subplots(nrows=10, ncols=7, constrained_layout=True, figsize=(20, 10))
+for blc_id in range(0, 10):
+	ax[blc_id][0].grid(b=True, which='both')
+	ax[blc_id][0].plot(N[-print_last_tmstms:], T[-print_last_tmstms:, blc_id])
+	ax[blc_id][0].set_ylabel(B_n_labels[blc_id], fontsize=fontsize)
+
+	ax[blc_id][1].grid(b=True, which='both')
+	ax[blc_id][1].plot(N[-print_last_tmstms:], kalmanT[-print_last_tmstms:, blc_id])
+
+	ax[blc_id][2].grid(b=True, which='both')
+	ax[blc_id][2].plot(N[-print_last_tmstms:], ma2T[-print_last_tmstms:, blc_id])
+
+	ax[blc_id][3].grid(b=True, which='both')
+	ax[blc_id][3].plot(N[-print_last_tmstms:], ma3T[-print_last_tmstms:, blc_id])
+
+	ax[blc_id][4].grid(b=True, which='both')
+	ax[blc_id][4].plot(N[-print_last_tmstms:], ma5T[-print_last_tmstms:, blc_id])
+
+	ax[blc_id][5].grid(b=True, which='both')
+	ax[blc_id][5].plot(N[-print_last_tmstms:], ma8T[-print_last_tmstms:, blc_id])
+
+	ax[blc_id][6].grid(b=True, which='both')
+	ax[blc_id][6].plot(N[-print_last_tmstms:], ma13T[-print_last_tmstms:, blc_id])
+
+ax[0][0].set_title('RAW', fontsize=fontsize)
+ax[0][1].set_title('Kalman filter', fontsize=fontsize)
+ax[0][2].set_title('ma on 2 timestamps', fontsize=fontsize)
+ax[0][3].set_title('ma on 3 timestamps', fontsize=fontsize)
+ax[0][4].set_title('ma on 5 timestamps', fontsize=fontsize)
+ax[0][5].set_title('ma on 8 timestamps', fontsize=fontsize)
+ax[0][6].set_title('ma on 13 timestamps', fontsize=fontsize)
+plt.tight_layout()
+plt.draw()
+fig.savefig(path.join(outpath, currentfile+".png"))
+plt.clf()
 

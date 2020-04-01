@@ -100,7 +100,7 @@ f.close()
 delta = np.mean(np.abs(sT[:-2, :] - sT[1:-1, :]))
 print(delta)
 
-agmntCount=5
+agmntCount=5000
 mu, sigma = 0, delta / 10
 np.random.seed(0)
 
