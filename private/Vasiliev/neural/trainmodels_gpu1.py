@@ -30,7 +30,7 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # <--------------------->
 # Tunable
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-batch_size = 130
+batch_size = 1100
 # <--------------------->
 print(device_lib.list_local_devices())
 
@@ -91,8 +91,8 @@ def plot_comparison(start_idx, name, length=100, train=True):
 
 # <--------------------->
 # Tunable
-warmup_steps = 10
-importance_factor = 100.0
+warmup_steps = 5
+importance_factor = 10.0
 # <--------------------->
 
 
@@ -124,7 +124,7 @@ def read_dtaset_by_index(index):
 # Read unaugmented dataset
 N, Mode, T, kalmanT, ma2T, ma3T, ma5T, ma8T, ma13T = read_dtaset_by_index(0)
 # Read agmntCount augmented copies and collect full dataset
-agmntCount = 500
+agmntCount = 1500
 # In order to have shifted and unsifted series with same shape
 t = cutFromTail + predictSteps
 
@@ -220,18 +220,18 @@ def batch_generator_validation(batch_size, sequence_length):
 
 
 # ###################### Main #########################################
-for outputBlockId in range(7, 10):
-    outData_train = np.expand_dims(shifted_dataset[:, 0:num_train, outputBlockId], axis=2)
-    outData_test = np.expand_dims(shifted_dataset[:, num_train:, outputBlockId], axis=2)
+for outputBlockId in range(6, 10):
+    outData_train = np.expand_dims(shifted_dataset[:, 0:num_train, 10 + outputBlockId], axis=2)
+    outData_test = np.expand_dims(shifted_dataset[:, num_train:, 10 + outputBlockId], axis=2)
 
     generator_traindata = batch_generator_train(batch_size=batch_size, sequence_length=sequence_length)
     generator_validdata = batch_generator_validation(batch_size=batch_size, sequence_length=sequence_length)
 
     model = Sequential()
-    model.add(LSTM(512, return_sequences=True, input_shape=(None, num_inData_signals,)))
-    model.add(LSTM(128, return_sequences=True))
-    model.add(Dense(64, activation="linear"))
-    model.add(Dense(1, activation="linear"))
+    model.add(LSTM(71, return_sequences=True, input_shape=(None, num_inData_signals,)))
+    model.add(Dense(11, activation="linear"))
+    model.add(LSTM(1, return_sequences=True))
+    model.add(Dense(1, activation="tanh"))
 
     model.compile(Adam(learning_rate=1e-3), loss=loss_mse_weighted)
 
@@ -249,7 +249,13 @@ for outputBlockId in range(7, 10):
                                            verbose=1)
     callbacks = [callback_early_stopping, callback_checkpoint, callback_reduce_lr]
 
-    model.fit_generator(generator=generator_traindata, epochs=1000000, steps_per_epoch=5769, validation_steps=10,
+    try:
+        model.load_weights(path_checkpoint)
+    except Exception as error:
+        print("Error trying to load checkpoint.")
+        print(error)
+
+    model.fit_generator(generator=generator_traindata, epochs=1000000, steps_per_epoch=1880, validation_steps=250,
                         validation_data=generator_validdata, callbacks=callbacks)
 
     try:
