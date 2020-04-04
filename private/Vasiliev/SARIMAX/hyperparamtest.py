@@ -11,86 +11,54 @@ import warnings
 
 plt.rc('text', usetex=True)
 
-outpath = "../../../plots/temperatures"
-inpath = "../../../"
 
-currentfile = "Imitator_2_2400.csv"
+def read_dtaset_by_index(index):
+    inpath = "../neural/data/"
+    currentfile = path.join(inpath, "data_T_{0}.csv".format(index))
+    # Read from file
+    strdatatype = np.dtype([('N', np.int_), ('Mode', np.float_),
+                            ('T', np.float_, (10,)),
+                            ('kalmanT', np.float_, (10,)),
+                            ('ma2T', np.float_, (10,)),
+                            ('ma3T', np.float_, (10,)),
+                            ('ma5T', np.float_, (10,)),
+                            ('ma8T', np.float_, (10,)),
+                            ('ma13T', np.float_, (10,)),
+                            ('ma21T', np.float_, (10,)),
+                            ('ma34T', np.float_, (10,)),
+                            ('ma55T', np.float_, (10,)),
+                            ('ma89T', np.float_, (10,)),
+                            ('ma144T', np.float_, (10,))])
+    # N, _Mode, _T, _kalmanT, _ma2T, _ma3T, _ma5T, _ma8T, _ma13T
+    return np.loadtxt(currentfile, unpack=True, delimiter=';', skiprows=1, dtype=strdatatype)
 
-# Read from file
-strdatatype = np.dtype([('N', np.int_, (2,)), ('Time_Count', np.int_ ), ('Mode', np.int_ ),
-                        ('T', np.float_, (10,)), ('S', np.bool_, (10,)), ('System_State', np.bool_ )])
-N, Time_Count, Mode, T, S, System_State = np.loadtxt(path.join(inpath, currentfile), 
-                                                     unpack=True, delimiter=';', skiprows=1, dtype=strdatatype)
 
-
+# Read unaugmented dataset
+N, Mode, T, kalmanT, ma2T, ma3T, ma5T, ma8T, ma13T, ma21T, ma34T, ma55T, ma89T, ma144T = read_dtaset_by_index(0)
+print(kalmanT[:, 0])
 
 # fit model
-p = range(0, 10)
-q = range(0, 10)
-d = [0]
+p = range(0, 8)
+q = range(0, 8)
+d = range(0, 5)
 pdq = list(itertools.product(p, d, q))
 warnings.filterwarnings("ignore")
 for param in pdq:
-	try:
-		print("###############################")
-		print(param)
-		print("###############################")
-		prm = np.array(param)
-		model = sm.tsa.statespace.SARIMAX(T[:,0],
-										  order=(15, 0, 5),
-										  seasonal_order=(prm[0], prm[1], prm[3], 48),
-										  enforce_stationarity=False,
-										  enforce_invertibility=False)
-		results = model.fit()
-		f = open('hyperparam.txt','a+') 
-		print('SARIMA{} - AIC:{}'.format(param, results.aic), file=f)
-		f.close()
-	except:
-		continue
-
-
-
-
-# final_model = sm.tsa.statespace.SARIMAX(fullW[65:],
-# 										order=(2, 0, 14),
-# 										seasonal_order=(0,0,0, 12),
-# 										enforce_stationarity=False,
-# 										enforce_invertibility=False)
-# results = final_model.fit()
-# print(results.summary().tables[1])
-
-# pred = results.get_prediction(end=1043, dynamic=False)
-# pred_vals = pred.predicted_mean
-# pred_ci = pred.conf_int()
-
-# extended_n = np.arange(0, 1044, 1)
-
-# # Draw naive prediction plot
-# fig, ax = plt.subplots(figsize=(8, 3.8))
-# ax.scatter(extended_n[1024:], pred_vals[1024:], 
-# 			marker='+',
-# 			color='crimson',
-# 			label='Prediction',
-# 			zorder=10)
-# ax.fill_between(extended_n[1024:],
-#                 pred_ci[1024, 0],
-#                 pred_ci[1024:, 1],
-#                 facecolor='gainsboro', 
-#                 label='Confidence interval',
-#                 interpolate=True,
-#                 zorder=0)
-# ax.plot(fulln[800:], fullW[800:],  ls='-', label='Raw signal', zorder=5)
-# plt.grid()
-# plt.ylabel(r'$W_{n}$')
-# plt.xlabel(r'$t_n$')
-# ax.xaxis.grid(b=True, which='both')
-# ax.yaxis.grid(b=True, which='both')
-# ax.legend(loc='upper left', frameon=True)
-# plt.draw()
-# fig.savefig(path.join(outpath, "prediction.png"))
-# plt.clf()
-
-# f = open('prediction.txt','w')
-# print('#timestamp, value, Confidence interval bounds', file=f)
-# for index in range(1024, 1043):
-# 	print(extended_n[index], pred_vals[index], pred_ci[index, 0], pred_ci[index, 1], file=f)
+    for sparam in pdq:
+        try:
+            print("###############################")
+            print(param, sparam)
+            print("###############################")
+            sprm = np.array(sparam)
+            model = sm.tsa.statespace.SARIMAX(kalmanT[:, 0],
+                                              order=param,
+                                              seasonal_order=(sprm[0], sprm[1], sprm[2], 50),
+                                              enforce_stationarity=False,
+                                              enforce_invertibility=False)
+            print("ffffffffffffffffffffffffffffffffffffffff")
+            results = model.fit()
+            f = open('hyperparam_Kalman.txt', 'a+')
+            print('ARIMA{}{} - AIC:{}'.format(param, sparam, results.aic), file=f)
+            f.close()
+        except:
+            continue

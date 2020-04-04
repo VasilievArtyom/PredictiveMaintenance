@@ -36,7 +36,7 @@ print(np.amax(ma13T), np.amin(ma13T), np.mean(ma13T))
 print(np.amax(Mode), np.amin(Mode), np.mean(Mode))
 
 B_n_labels = [r'$T^{(0)}$', r'$T^{(1)}$', r'$T^{(2)}$', r'$T^{(3)}$', r'$T^{(4)}$', r'$T^{(5)}$', r'$T^{(6)}$', r'$T^{(7)}$', r'$T^{(8)}$', r'$T^{(9)}$']
-print_last_tmstms = 80
+print_last_tmstms = 100
 fontsize = 13
 fig, ax = plt.subplots(nrows=10, ncols=7, constrained_layout=True, figsize=(13, 9))
 for blc_id in range(0, 10):
