@@ -38,9 +38,9 @@ N, Mode, T, kalmanT, ma2T, ma3T, ma5T, ma8T, ma13T, ma21T, ma34T, ma55T, ma89T, 
 print(kalmanT[:, 0])
 
 # fit model
-p = range(0, 8)
-q = range(0, 8)
-d = range(0, 5)
+p = range(2, 5)
+q = range(2, 5)
+d = range(1, 3)
 pdq = list(itertools.product(p, d, q))
 warnings.filterwarnings("ignore")
 for param in pdq:

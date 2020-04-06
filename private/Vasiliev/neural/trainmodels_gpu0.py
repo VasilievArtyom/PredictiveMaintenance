@@ -11,6 +11,7 @@ from keras.layers import Input, Dense, LSTM
 from keras.optimizers import Adam
 from keras import optimizers
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from keras import losses
 from tensorflow.python.client import device_lib
 
 plt.rc('text', usetex=True)
@@ -20,17 +21,17 @@ plt.rc('text', usetex=True)
 predictSteps = 20
 # <--------------------->
 
-sequence_length_in = predictSteps * 10
+sequence_length_in = predictSteps * 4
 sequence_length_out = predictSteps
 sequence_length = sequence_length_in + sequence_length_out
 # Keep dataset tail for validate prediction quality
-cutFromTail = 100
+cutFromTail = 60
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # <--------------------->
 # Tunable
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-batch_size = 1700
+batch_size = 125
 # <--------------------->
 print(device_lib.list_local_devices())
 
@@ -91,7 +92,7 @@ def plot_comparison(start_idx, name, length=100, train=True):
 
 # <--------------------->
 # Tunable
-warmup_steps = 2
+warmup_steps = 0
 importance_factor = 2.0
 # <--------------------->
 
@@ -112,47 +113,44 @@ def read_dtaset_by_index(index):
     strdatatype = np.dtype([('N', np.int_), ('Mode', np.float_),
                             ('T', np.float_, (10,)),
                             ('kalmanT', np.float_, (10,)),
-                            ('ma2T', np.float_, (10,)),
+                            ('kalmanT_dot', np.float_, (10,)),
                             ('ma3T', np.float_, (10,)),
-                            ('ma5T', np.float_, (10,)),
-                            ('ma8T', np.float_, (10,)),
                             ('ma13T', np.float_, (10,)),
-                            ('ma21T', np.float_, (10,)),
-                            ('ma34T', np.float_, (10,)),
                             ('ma55T', np.float_, (10,)),
-                            ('ma89T', np.float_, (10,)),
                             ('ma144T', np.float_, (10,))])
     # N, _Mode, _T, _kalmanT, _ma2T, _ma3T, _ma5T, _ma8T, _ma13T
     return np.loadtxt(currentfile, unpack=True, delimiter=';', skiprows=1, dtype=strdatatype)
 
 
 # Read unaugmented dataset
-N, Mode, T, kalmanT, ma2T, ma3T, ma5T, ma8T, ma13T, ma21T, ma34T, ma55T, ma89T, ma144T = read_dtaset_by_index(0)
+N, Mode, T, kalmanT, kalmanT_dot, ma3T, ma13T, ma55T, ma144T = read_dtaset_by_index(0)
 # Read agmntCount augmented copies and collect full dataset
-agmntCount = 500
+agmntCount = 200
 # In order to have shifted and unsifted series with same shape
 t = cutFromTail + predictSteps
 
 dataset = np.empty((agmntCount, len(T[144:-t, 0]), 61))
 shifted_dataset = np.empty((agmntCount, len(T[144:-t, 0]), 61))
 for agmnt_index in range(0, agmntCount):
-    _N, _Mode, _T, _kalmanT, _ma2T, _ma3T, _ma5T, _ma8T, _ma13T, _ma21T, _ma34T, _ma55T, _ma89T, _ma144T = read_dtaset_by_index(agmnt_index)
+    _N, _Mode, _T, _kalmanT, _kalmanT_dot, _ma3T, _ma13T, _ma55T, _ma144T = read_dtaset_by_index(agmnt_index)
     dataset[agmnt_index, :, 60] = _Mode[144:-t]
     dataset[agmnt_index, :, 0:10] = _kalmanT[144:-t, :]
+    dataset[agmnt_index, :, 10:20] = _kalmanT_dot[144:-t, :]
     dataset[agmnt_index, :, 20:30] = _ma3T[144:-t, :]
     dataset[agmnt_index, :, 30:40] = _ma13T[144:-t, :]
     dataset[agmnt_index, :, 40:50] = _ma55T[144:-t, :]
-    dataset[agmnt_index, :, 50:60] = _ma55T[144:-t, :]
+    dataset[agmnt_index, :, 50:60] = _ma144T[144:-t, :]
 
     shifted_dataset[agmnt_index, :, 60] = _Mode[144 + predictSteps:-cutFromTail]
     shifted_dataset[agmnt_index, :, 0:10] = _kalmanT[144 + predictSteps:-cutFromTail]
+    shifted_dataset[agmnt_index, :, 10:20] = _kalmanT_dot[144 + predictSteps:-cutFromTail]
     shifted_dataset[agmnt_index, :, 20:30] = _ma3T[144 + predictSteps:-cutFromTail]
     shifted_dataset[agmnt_index, :, 30:40] = _ma13T[144 + predictSteps:-cutFromTail]
     shifted_dataset[agmnt_index, :, 40:50] = _ma55T[144 + predictSteps:-cutFromTail]
-    shifted_dataset[agmnt_index, :, 50:60] = _ma55T[144 + predictSteps:-cutFromTail]
+    shifted_dataset[agmnt_index, :, 50:60] = _ma144T[144 + predictSteps:-cutFromTail]
 
 num_data = len(dataset[0, :, 0])
-train_split = 0.80
+train_split = 0.85
 num_train = int(train_split * num_data)
 num_test = num_data - num_train
 
@@ -230,12 +228,16 @@ for outputBlockId in range(0, 5):
     generator_validdata = batch_generator_validation(batch_size=batch_size, sequence_length=sequence_length)
 
     model = Sequential()
-    model.add(LSTM(50, return_sequences=True, input_shape=(None, num_inData_signals,)))
-    model.add(LSTM(50, return_sequences=True))
-    # model.add(Dense(10, activation="linear"))
+    model.add(LSTM(1024, return_sequences=True, input_shape=(None, num_inData_signals,)))
+    model.add(LSTM(128, return_sequences=True))
+    model.add(Dense(10, activation="linear"))
+    # model.add(Dense(32, activation="tanh"))
     model.add(Dense(1, activation="tanh"))
 
-    model.compile(Adam(learning_rate=1e-3), loss=loss_mse_weighted)
+    # model.compile(Adam(learning_rate=1e-3), loss=loss_mse_weighted)
+    #model.compile(Adam(learning_rate=5e-3), loss=losses.logcosh)
+    sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=False)
+    model.compile(optimizer=sgd, loss=losses.logcosh)
 
     path_checkpoint = 'models/' + str(outputBlockId) + '_multistep_on_' + str(predictSteps) + '_steps.keras'
     callback_checkpoint = ModelCheckpoint(filepath=path_checkpoint,
@@ -257,7 +259,7 @@ for outputBlockId in range(0, 5):
         print("Error trying to load checkpoint.")
         print(error)
 
-    model.fit_generator(generator=generator_traindata, epochs=1000000, steps_per_epoch=441, validation_steps=59,
+    model.fit_generator(generator=generator_traindata, epochs=1000000, steps_per_epoch=2713, validation_steps=321,
                         validation_data=generator_validdata, callbacks=callbacks)
 
     try:
