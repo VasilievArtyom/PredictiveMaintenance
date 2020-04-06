@@ -25,7 +25,7 @@ np.random.seed(0)  # Set a random seed for reproducibility
 # <--------------------->
 # Tunable
 
-agmntCount = 3
+agmntCount = 1000
 blc_id = 0
 pred_step = 1
 gpu_id = str(1)
@@ -196,7 +196,7 @@ model.compile(optimizer='Adam',
 
 path_checkpoint = '../models/' + str(blc_id) + '_binary_on_' + str(pred_step) + '.keras'
 callback_checkpoint = ModelCheckpoint(filepath=path_checkpoint, monitor='val_main_output_loss', verbose=1, save_weights_only=True, save_best_only=True)
-callback_early_stopping = EarlyStopping(monitor='val_main_output_loss', patience=1, verbose=1)
+callback_early_stopping = EarlyStopping(monitor='val_main_output_loss', patience=10, verbose=1)
 callback_reduce_lr = ReduceLROnPlateau(monitor='val_main_output_loss', factor=0.1, min_lr=1e-5, patience=0, verbose=1)
 callbacks = [callback_early_stopping, callback_checkpoint, callback_reduce_lr]
 
