@@ -113,21 +113,21 @@ for agmnt_index in range(1, agmntCount + 1):
 
     for blc_id in range(0, 10):
         mu = 0
-        sigma = np.mean(np.abs(skalmanT[:-2, :] - skalmanT[1:-1, :]))
+        sigma = np.mean(np.abs(skalmanT[:-2, :] - skalmanT[1:-1, :])) / 2.0
         agmnt_kalmanT[:, blc_id] = skalmanT[:, blc_id] + np.random.normal(mu, sigma, (np.size(skalmanT[:, 0])))
 
-        sigma = np.mean(np.abs(skalmanT_dot[:-2, :] - skalmanT_dot[1:-1, :]))
+        sigma = np.mean(np.abs(skalmanT_dot[:-2, :] - skalmanT_dot[1:-1, :])) / 10.0
         agmnt_kalmanT_dot[:, blc_id] = skalmanT_dot[:, blc_id] + np.random.normal(mu, sigma, (np.size(skalmanT_dot[:, 0])))
 
-        sigma = np.mean(np.abs(srwavT[:-2, :] - srwavT[1:-1, :]))
+        sigma = np.mean(np.abs(srwavT[:-2, :] - srwavT[1:-1, :])) / 2.0
         agmnt_rwavT[:, blc_id] = srwavT[:, blc_id] + np.random.normal(mu, sigma, (np.size(srwavT[:, 0])))
 
-        sigma = np.mean(np.abs(sma13T[13:-2, :] - sma13T[14:-1, :]))
+        sigma = np.mean(np.abs(sma13T[13:-2, :] - sma13T[14:-1, :])) / 10.0
         agmnt_ma13T[:, blc_id] = sma13T[:, blc_id] + np.random.normal(mu, sigma, (np.size(sma13T[:, 0])))
 
-        sigma = np.mean(np.abs(sma55T[55:-2, :] - sma13T[56:-1, :]))
+        sigma = np.mean(np.abs(sma55T[55:-2, :] - sma13T[56:-1, :])) / 2.0
         agmnt_ma55T[:, blc_id] = sma55T[:, blc_id] + np.random.normal(mu, sigma, (np.size(sma55T[:, 0])))
 
-        sigma = np.mean(np.abs(sma13T[144:-2, :] - sma13T[145:-1, :]))
+        sigma = np.mean(np.abs(sma13T[144:-2, :] - sma13T[145:-1, :])) / 2.0
         agmnt_ma144T[:, blc_id] = sma144T[:, blc_id] + np.random.normal(mu, sigma, (np.size(sma144T[:, 0])))
     print_dataset(N, Modes, agmnt_kalmanT, agmnt_kalmanT_dot, agmnt_rwavT, agmnt_ma13T, agmnt_ma55T, agmnt_ma144T, S.astype('float'), slfc, agmnt_index)
