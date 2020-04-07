@@ -25,7 +25,7 @@ np.random.seed(0)  # Set a random seed for reproducibility
 # <--------------------->
 # Tunable
 
-agmntCount = 1000
+agmntCount = 10
 blc_id = 0
 pred_step = 1
 gpu_id = str(1)
@@ -46,7 +46,7 @@ if len(sys.argv) > 1:
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # <--------------------->
 # Tunable
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
 batch_size = 520
 # <--------------------->
 print(device_lib.list_local_devices())
@@ -90,7 +90,7 @@ for agmnt_index in range(1, agmntCount + 1):
 l_b, r_b = cutFromHead, cutFromTail
 len_data = len(ds[0, l_b:-r_b, 0])
 
-len_test = int(rnn_sequence_length * 1.8)
+len_test = int(rnn_sequence_length * 1.25)
 len_train = len_data - len_test
 print(l_b, r_b)
 print("len_data = ", len_data)
@@ -192,7 +192,7 @@ plot_model(model, to_file='model.png', show_shapes=True)
 
 model.compile(optimizer='Adam',
               loss={'main_output': 'binary_crossentropy', 'recurrent_output': 'logcosh'},
-              loss_weights={'main_output': 1., 'recurrent_output': 0.85})
+              loss_weights={'main_output': 1., 'recurrent_output': 0.50})
 
 path_checkpoint = '../models/' + str(blc_id) + '_binary_on_' + str(pred_step) + '.keras'
 callback_checkpoint = ModelCheckpoint(filepath=path_checkpoint, monitor='val_main_output_loss', verbose=1, save_weights_only=True, save_best_only=True)
