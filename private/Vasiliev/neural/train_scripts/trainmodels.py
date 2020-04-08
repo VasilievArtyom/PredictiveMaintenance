@@ -131,7 +131,7 @@ def batch_generator_train(batch_size, rnn_sequence_length):
             X2[i, :] = ds_train[idaugmnt, idx + rnn_sequence_length - 1, :]
 
             Y1[i, 0] = ds_train[idaugmnt, idx + rnn_sequence_length - 1, 0]
-            Y2[i, 0] = ds_train[idaugmnt, idx + pred_step + rnn_sequence_length, 6]
+            Y2[i, 0] = ds_train[idaugmnt, idx + pred_step + rnn_sequence_length - 1, 6]
         yield [X1, X2], [Y1, Y2]
 
 
@@ -161,7 +161,7 @@ def batch_generator_validation(batch_size, rnn_sequence_length):
             X2[i, :] = ds_test[idaugmnt, idx + rnn_sequence_length - 1, :]
 
             Y1[i, 0] = ds_test[idaugmnt, idx + rnn_sequence_length, 0]
-            Y2[i, 0] = ds_test[idaugmnt, idx + pred_step + rnn_sequence_length, 6]
+            Y2[i, 0] = ds_test[idaugmnt, idx + pred_step + rnn_sequence_length - 1, 6]
         yield [X1, X2], [Y1, Y2]
 
 
@@ -224,6 +224,6 @@ f = open((str(blc_id) + '_binary_on_' + str(pred_step) + ".txt"), 'w+')
 for check_index in range(0, 1):
     [tmpX1, tmpX2], [tmpY1, tmpY2] = next(generator_validdata)
     [pred1, pred2] = model.predict({'recurrent_input': tmpX1, 'sequential_input': tmpX2})
-    print("true vs pred:", file=f)
+    print('true vs pred:', file=f)
     for line in range(0, batch_size):
-        print(tmpY2[line, 0], pred2[line, 0], file=f)
+        print(tmpY2[line, 0], pred2[line, 0], sep=',', file=f)
