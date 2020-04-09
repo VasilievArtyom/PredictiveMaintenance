@@ -32,7 +32,7 @@ if len(sys.argv) > 1:
 # Tunable
 
 rnn_sequence_length = 300
-cutFromTail = 0
+cutFromTail = 1
 cutFromHead = 144
 max_pred_step = 60
 # <--------------------->
@@ -160,7 +160,7 @@ def count_mismatches(_from, _to, _blc_id, _pred_step, _level):
 levels = np.empty((21, 10))
 # min_tmpstmp = rnn_sequence_length + 144
 max_tmstmp = len(N) - max_pred_step
-min_tmpstmp = max_tmstmp - 61
+min_tmpstmp = max_tmstmp - 200
 print(min_tmpstmp, max_tmstmp)
 
 for pred_step in range(1, 22):
