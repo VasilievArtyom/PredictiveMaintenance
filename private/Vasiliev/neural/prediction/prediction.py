@@ -6,44 +6,21 @@ import os
 import sys
 import matplotlib.pyplot as plt
 
-import keras
-from keras.utils import Sequence
-from keras import backend as K
-from keras.models import Model
-from keras.layers import Input, Dense, Embedding, LSTM
-from keras.optimizers import Adam
-from keras import optimizers
-from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from keras import losses
-from keras.utils import plot_model
-from tensorflow.python.client import device_lib
-
-
 plt.rc('text', usetex=True)
 np.random.seed(0)  # Set a random seed for reproducibility
-
-blc_id = 0
-gpu_id = str(1)
-if len(sys.argv) > 1:
-    blc_id = int(sys.argv[1])
-    gpu_id = str(sys.argv[2])
 
 # <--------------------->
 # Tunable
 
 rnn_sequence_length = 300
-cutFromTail = 0
+cutFromTail = 1
 cutFromHead = 144
 max_pred_step = 60
 # <--------------------->
 
-
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# <--------------------->
-# Tunable
-os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
-# <--------------------->
-# print(device_lib.list_local_devices())
+tmstmsp = 2353
+if len(sys.argv) > 1:
+    tmstmsp = int(sys.argv[1])
 
 
 def read_dtaset_by_index(index):
@@ -79,94 +56,38 @@ for _blc_id in range(0, 10):
 S = S[l_b:-r_b, :]
 
 
-def get_data_by_timestamp(_n, _blc_id, _pred_step):
-    min_poss_n, max_poss_n = np.amin(N) + rnn_sequence_length, np.amax(N) - max_pred_step
-    assert ((_n <= max_poss_n) and (_n >= min_poss_n)), "Out of bounds"
-    index = int(np.where(N == _n)[0])
-
-    X1_shape = (1, rnn_sequence_length, 13)
-    X1 = np.zeros(shape=X1_shape, dtype=np.float16)
-    X2_shape = (1, 13)
-    X2 = np.zeros(shape=X2_shape, dtype=np.float16)
-
-    Y1_shape = (1, 1)
-    Y1 = np.zeros(shape=Y1_shape, dtype=np.float16)
-    Y2_shape = (1, 1)
-    Y2 = np.zeros(shape=Y2_shape, dtype=np.float16)
-
-    idx = index + 1 - rnn_sequence_length
-    X1[0, :, :] = ds[_blc_id, idx:idx + rnn_sequence_length, :]
-    X2[0, :] = ds[_blc_id, idx + rnn_sequence_length - 1, :]
-
-    Y1[0, 0] = ds[_blc_id, idx + rnn_sequence_length - 1, 0]
-    Y2[0, 0] = ds[_blc_id, idx + _pred_step + rnn_sequence_length - 1, 6]
-
-    return [X1, X2], [Y1, Y2]
+def read_singlemodelpredictions(_blc_id, _pred_step):
+    inpath = ""
+    currentfile = str(_blc_id) + '_binary_on_' + str(_pred_step) + ".csv"
+    # Read from file
+    strdatatype = np.dtype([('N', np.int_), ('GT', np.float_), ('pred', np.float_)])
+    # _N, _GT, _pred
+    return np.loadtxt(path.join(inpath, currentfile), unpack=True, delimiter=',', skiprows=1, dtype=strdatatype)
 
 
-def get_ground_true_by_timestamp(_n, _blc_id, _pred_step):
-    min_poss_n, max_poss_n = np.amin(N) + rnn_sequence_length, np.amax(N) - max_pred_step
-    assert ((_n <= max_poss_n) and (_n >= min_poss_n)), "Out of bounds"
-    index = int(np.where(N == _n)[0])
-    return S[index + _pred_step, _blc_id]
+def collect_predictions_over_tmstmp(_n):
+    preds = np.zeros((21, 10))
+    for blc_id in range(0, 10):
+        for pred_step in range(1, 22):
+            _N, _GT, _pred = read_singlemodelpredictions(blc_id, pred_step)
+            min_poss_n, max_poss_n = np.amin(_N), np.amax(_N)
+            assert ((_n <= max_poss_n) and (_n >= min_poss_n)), "Out of bounds"
+            index = int(np.where(_N == _n)[0])
+            preds[pred_step - 1, blc_id] = _pred[index]
+    return preds
 
 
-# ################# model difinition #########################################
-recurrent_input = Input(shape=(rnn_sequence_length, 13), name='recurrent_input')
-rec_layer_1 = LSTM(74, return_sequences=True)(recurrent_input)
-rec_layer_2 = LSTM(50)(rec_layer_1)
-recurrent_output = Dense(1, activation='tanh', name='recurrent_output')(rec_layer_2)
-sequential_input = Input(shape=(13,), name='sequential_input')
-x = keras.layers.concatenate([rec_layer_2, sequential_input])
-x = Dense(64, activation='tanh')(x)
-x = Dense(64, activation='tanh')(x)
-x = Dense(64, activation='tanh')(x)
-main_output = Dense(1, activation='sigmoid', name='main_output')(x)
-model = Model(inputs=[recurrent_input, sequential_input], outputs=[recurrent_output, main_output])
-plot_model(model, to_file='model.png', show_shapes=True)
-model.compile(optimizer='Adam',
-              loss={'main_output': 'binary_crossentropy', 'recurrent_output': 'logcosh'},
-              loss_weights={'main_output': 1., 'recurrent_output': 0.50})
-#############################################################################
-
-
-def perfotm_prediction_over_timestamp(_n, _blc_id, _pred_step):
-    path_checkpoint = '../models/' + str(_blc_id) + '_binary_on_' + str(_pred_step) + '.keras'
-
-    try:
-        model.load_weights(path_checkpoint)
-    except Exception as error:
-        print("Error trying to load checkpoint.")
-        print(error)
-    [tmpX1, tmpX2], [Y1, Y2] = get_data_by_timestamp(_n, _blc_id, _pred_step)
-    [pred1, pred2] = model.predict({'recurrent_input': tmpX1, 'sequential_input': tmpX2})
-    return float(pred2[0, 0])
-
-
-def count_mismatches(_from, _to, _blc_id, _pred_step, _level):
-    current_count = 0
-    for tmstmp in range(_from, _to + 1):
-        true_val = get_ground_true_by_timestamp(tmstmp, _blc_id, _pred_step)
-        pred_val = perfotm_prediction_over_timestamp(tmstmp, _blc_id, _pred_step)
-        tmpval = 0.0
-        if (pred_val > _level):
-            tmpval = 1.0
-        if (int(tmpval) != true_val):
-            current_count += 1
-        print(true_val, pred_val, current_count)
-    return current_count
-
-
-levels = np.empty((21, 10))
-# min_tmpstmp = rnn_sequence_length + 144
-max_tmstmp = len(N) - max_pred_step
-min_tmpstmp = max_tmstmp - 61
-print(min_tmpstmp, max_tmstmp)
-
-for pred_step in range(1, 22):
-    f = open((str(blc_id) + '_binary_on_' + str(pred_step) + ".csv"), 'w+')
-    print("N,GT,predict", file=f)
-    for tmstmp in range(min_tmpstmp, max_tmstmp):
-        true_val = get_ground_true_by_timestamp(tmstmp, blc_id, pred_step)
-        pred_val = perfotm_prediction_over_timestamp(tmstmp, blc_id, pred_step)
-        print(tmstmp, true_val, pred_val, sep=',', file=f)
+outpath = "../results/"
+predictions = collect_predictions_over_tmstmp(tmstmsp)
+S_n_labels = [r'$S^{(0)}$', r'$S^{(1)}$', r'$S^{(2)}$', r'$S^{(3)}$', r'$B^{(4)}$', r'$S^{(5)}$', r'$S^{(6)}$', r'$S^{(7)}$', r'$S^{(8)}$', r'$S^{(9)}$']
+fig, ax = plt.subplots(nrows=10, ncols=1, constrained_layout=True, figsize=(10, 13))
+for rows in range(0, 10):
+    ax[rows].step(N[-200:-60], S[-200:-60, rows], label="Raw signal")
+    ax[rows].step(N[-60:], S[-60:, rows], label="Validation", color='gray')
+    ax[rows].plot(np.arange(tmstmsp, tmstmsp + 21), predictions[:, rows], label="Prediction")
+    ax[rows].set_ylabel(S_n_labels[rows], fontsize=15)
+    ax[rows].legend(loc='upper left', frameon=True)
+plt.tight_layout()
+plt.draw()
+fig.savefig(path.join(outpath, str(tmstmsp) + ".png"))
+plt.clf()

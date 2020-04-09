@@ -68,19 +68,19 @@ N, Mode, kalmanT, kalmanT_dot, rwavT, ma13T, ma55T, ma144T, S, lfc = read_dtaset
 # Collect full dataset
 n_features = 13
 l_b, r_b = cutFromHead, cutFromTail
-N = N[l_b:-r_b]
+N = N[l_b:]
 ds = np.empty((10, len(N), n_features))
 for _blc_id in range(0, 10):
     (ds[_blc_id, :, 0], ds[_blc_id, :, 1], ds[_blc_id, :, 2],
      ds[_blc_id, :, 3], ds[_blc_id, :, 4], ds[_blc_id, :, 5],
-     ds[_blc_id, :, 6], ds[_blc_id, :, 7], ds[_blc_id, :, 8:13]) = (kalmanT[l_b:-r_b, _blc_id], kalmanT_dot[l_b:-r_b, _blc_id],
-                                                                    rwavT[l_b:-r_b, _blc_id], ma13T[l_b:-r_b, _blc_id], ma55T[l_b:-r_b, _blc_id],
-                                                                    ma144T[l_b:-r_b, _blc_id], S[l_b:-r_b, _blc_id], lfc[l_b:-r_b, _blc_id], Mode[l_b:-r_b, :])
-S = S[l_b:-r_b, :]
+     ds[_blc_id, :, 6], ds[_blc_id, :, 7], ds[_blc_id, :, 8:13]) = (kalmanT[l_b:, _blc_id], kalmanT_dot[l_b:, _blc_id],
+                                                                    rwavT[l_b:, _blc_id], ma13T[l_b:, _blc_id], ma55T[l_b:, _blc_id],
+                                                                    ma144T[l_b:, _blc_id], S[l_b:, _blc_id], lfc[l_b:, _blc_id], Mode[l_b:, :])
+S = S[l_b:, :]
 
 
 def get_data_by_timestamp(_n, _blc_id, _pred_step):
-    min_poss_n, max_poss_n = np.amin(N) + rnn_sequence_length, np.amax(N) - max_pred_step
+    min_poss_n, max_poss_n = np.amin(N) + rnn_sequence_length, np.amax(N)
     assert ((_n <= max_poss_n) and (_n >= min_poss_n)), "Out of bounds"
     index = int(np.where(N == _n)[0])
 
@@ -89,26 +89,28 @@ def get_data_by_timestamp(_n, _blc_id, _pred_step):
     X2_shape = (1, 13)
     X2 = np.zeros(shape=X2_shape, dtype=np.float16)
 
-    Y1_shape = (1, 1)
-    Y1 = np.zeros(shape=Y1_shape, dtype=np.float16)
-    Y2_shape = (1, 1)
-    Y2 = np.zeros(shape=Y2_shape, dtype=np.float16)
+    # Y1_shape = (1, 1)
+    # Y1 = np.zeros(shape=Y1_shape, dtype=np.float16)
+    # Y2_shape = (1, 1)
+    # Y2 = np.zeros(shape=Y2_shape, dtype=np.float16)
 
     idx = index + 1 - rnn_sequence_length
     X1[0, :, :] = ds[_blc_id, idx:idx + rnn_sequence_length, :]
     X2[0, :] = ds[_blc_id, idx + rnn_sequence_length - 1, :]
 
-    Y1[0, 0] = ds[_blc_id, idx + rnn_sequence_length - 1, 0]
-    Y2[0, 0] = ds[_blc_id, idx + _pred_step + rnn_sequence_length - 1, 6]
+    # Y1[0, 0] = ds[_blc_id, idx + rnn_sequence_length - 1, 0]
+    # Y2[0, 0] = ds[_blc_id, idx + _pred_step + rnn_sequence_length - 1, 6]
 
-    return [X1, X2], [Y1, Y2]
+    return [X1, X2]
 
 
 def get_ground_true_by_timestamp(_n, _blc_id, _pred_step):
-    min_poss_n, max_poss_n = np.amin(N) + rnn_sequence_length, np.amax(N) - max_pred_step
-    assert ((_n <= max_poss_n) and (_n >= min_poss_n)), "Out of bounds"
-    index = int(np.where(N == _n)[0])
-    return S[index + _pred_step, _blc_id]
+    min_poss_n, max_poss_n = np.amin(N) + rnn_sequence_length, np.amax(N) - 22
+    if ((_n <= max_poss_n) and (_n >= min_poss_n)):
+        index = int(np.where(N == _n)[0])
+        return S[index + _pred_step, _blc_id]
+    else:
+        return np.nan
 
 
 # ################# model difinition #########################################
@@ -138,7 +140,7 @@ def perfotm_prediction_over_timestamp(_n, _blc_id, _pred_step):
     except Exception as error:
         print("Error trying to load checkpoint.")
         print(error)
-    [tmpX1, tmpX2], [Y1, Y2] = get_data_by_timestamp(_n, _blc_id, _pred_step)
+    [tmpX1, tmpX2] = get_data_by_timestamp(_n, _blc_id, _pred_step)
     [pred1, pred2] = model.predict({'recurrent_input': tmpX1, 'sequential_input': tmpX2})
     return float(pred2[0, 0])
 
@@ -159,8 +161,8 @@ def count_mismatches(_from, _to, _blc_id, _pred_step, _level):
 
 levels = np.empty((21, 10))
 # min_tmpstmp = rnn_sequence_length + 144
-max_tmstmp = len(N) - max_pred_step
-min_tmpstmp = max_tmstmp - 200
+max_tmstmp = np.amax(N) + 1
+min_tmpstmp = max_tmstmp - 250
 print(min_tmpstmp, max_tmstmp)
 
 for pred_step in range(1, 22):
