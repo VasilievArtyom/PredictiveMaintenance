@@ -48,6 +48,7 @@ l_b, r_b = cutFromHead, cutFromTail
 N = N[l_b:-r_b]
 ds = np.empty((10, len(N), n_features))
 for _blc_id in range(0, 10):
+    N, Mode, kalmanT, kalmanT_dot, rwavT, ma13T, ma55T, ma144T, S, lfc = read_dtaset_by_index(0)
     (ds[_blc_id, :, 0], ds[_blc_id, :, 1], ds[_blc_id, :, 2],
      ds[_blc_id, :, 3], ds[_blc_id, :, 4], ds[_blc_id, :, 5],
      ds[_blc_id, :, 6], ds[_blc_id, :, 7], ds[_blc_id, :, 8:13]) = (kalmanT[l_b:-r_b, _blc_id], kalmanT_dot[l_b:-r_b, _blc_id],

@@ -35,6 +35,7 @@ rnn_sequence_length = 400
 cutFromTail = 1
 cutFromHead = 144
 max_pred_step = 60
+augmnt_count = 50
 # <--------------------->
 
 
@@ -69,13 +70,16 @@ N, Mode, kalmanT, kalmanT_dot, rwavT, ma13T, ma55T, ma144T, S, lfc = read_dtaset
 n_features = 13
 l_b, r_b = cutFromHead, cutFromTail
 N = N[l_b:]
-ds = np.empty((10, len(N), n_features))
+ds = np.empty((augmnt_count, 10, len(N), n_features))
 for _blc_id in range(0, 10):
-    (ds[_blc_id, :, 0], ds[_blc_id, :, 1], ds[_blc_id, :, 2],
-     ds[_blc_id, :, 3], ds[_blc_id, :, 4], ds[_blc_id, :, 5],
-     ds[_blc_id, :, 6], ds[_blc_id, :, 7], ds[_blc_id, :, 8:13]) = (kalmanT[l_b:, _blc_id], kalmanT_dot[l_b:, _blc_id],
-                                                                    rwavT[l_b:, _blc_id], ma13T[l_b:, _blc_id], ma55T[l_b:, _blc_id],
-                                                                    ma144T[l_b:, _blc_id], S[l_b:, _blc_id], lfc[l_b:, _blc_id], Mode[l_b:, :])
+    for augmnt_id in range(0, augmnt_count):
+        N, Mode, kalmanT, kalmanT_dot, rwavT, ma13T, ma55T, ma144T, S, lfc = read_dtaset_by_index(augmnt_id)
+        N = N[l_b:]
+        (ds[augmnt_id, _blc_id, :, 0], ds[augmnt_id, _blc_id, :, 1], ds[augmnt_id, _blc_id, :, 2],
+         ds[augmnt_id, _blc_id, :, 3], ds[augmnt_id, _blc_id, :, 4], ds[augmnt_id, _blc_id, :, 5],
+         ds[augmnt_id, _blc_id, :, 6], ds[augmnt_id, _blc_id, :, 7], ds[augmnt_id, _blc_id, :, 8:13]) = (kalmanT[l_b:, _blc_id], kalmanT_dot[l_b:, _blc_id],
+                                                                                                         rwavT[l_b:, _blc_id], ma13T[l_b:, _blc_id], ma55T[l_b:, _blc_id],
+                                                                                                         ma144T[l_b:, _blc_id], S[l_b:, _blc_id], lfc[l_b:, _blc_id], Mode[l_b:, :])
 S = S[l_b:, :]
 
 
@@ -84,9 +88,9 @@ def get_data_by_timestamp(_n, _blc_id, _pred_step):
     assert ((_n <= max_poss_n) and (_n >= min_poss_n)), "Out of bounds"
     index = int(np.where(N == _n)[0])
 
-    X1_shape = (1, rnn_sequence_length, 13)
+    X1_shape = (augmnt_count, rnn_sequence_length, 13)
     X1 = np.zeros(shape=X1_shape, dtype=np.float16)
-    X2_shape = (1, 13)
+    X2_shape = (augmnt_count, 13)
     X2 = np.zeros(shape=X2_shape, dtype=np.float16)
 
     # Y1_shape = (1, 1)
@@ -95,8 +99,8 @@ def get_data_by_timestamp(_n, _blc_id, _pred_step):
     # Y2 = np.zeros(shape=Y2_shape, dtype=np.float16)
 
     idx = index + 1 - rnn_sequence_length
-    X1[0, :, :] = ds[_blc_id, idx:idx + rnn_sequence_length, :]
-    X2[0, :] = ds[_blc_id, idx + rnn_sequence_length - 1, :]
+    X1[:, :, :] = ds[:, _blc_id, idx:idx + rnn_sequence_length, :]
+    X2[:, :] = ds[:, _blc_id, idx + rnn_sequence_length - 1, :]
 
     # Y1[0, 0] = ds[_blc_id, idx + rnn_sequence_length - 1, 0]
     # Y2[0, 0] = ds[_blc_id, idx + _pred_step + rnn_sequence_length - 1, 6]
@@ -146,7 +150,7 @@ def perfotm_prediction_over_timestamp(_n, _blc_id, _pred_step):
         print(error)
     [tmpX1, tmpX2] = get_data_by_timestamp(_n, _blc_id, _pred_step)
     [pred1, pred2] = model.predict({'recurrent_input': tmpX1, 'sequential_input': tmpX2})
-    return float(pred2[0, 0])
+    return float(np.mean(pred2[:, 0]))
 
 
 def count_mismatches(_from, _to, _blc_id, _pred_step, _level):
