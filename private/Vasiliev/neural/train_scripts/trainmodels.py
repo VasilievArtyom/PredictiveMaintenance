@@ -25,12 +25,12 @@ np.random.seed(0)  # Set a random seed for reproducibility
 # <--------------------->
 # Tunable
 
-agmntCount = 10
+agmntCount = 5
 blc_id = 0
 pred_step = 1
 gpu_id = str(1)
 
-rnn_sequence_length = 300
+rnn_sequence_length = 400
 cutFromTail = 60
 cutFromHead = 144
 max_pred_step = 60
@@ -47,7 +47,7 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # <--------------------->
 # Tunable
 os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
-batch_size = 520
+batch_size = 230
 # <--------------------->
 print(device_lib.list_local_devices())
 
@@ -87,22 +87,73 @@ for agmnt_index in range(1, agmntCount + 1):
 
 
 # boundaries
-l_b, r_b = cutFromHead, cutFromTail
-len_data = len(ds[0, l_b:-r_b, 0])
+l_b, r_b = cutFromHead + rnn_sequence_length, cutFromTail + max_pred_step
+targets = ds[0, l_b:-r_b, 6]
 
-len_test = int(rnn_sequence_length * 1.25)
-len_train = len_data - len_test
-print(l_b, r_b)
-print("len_data = ", len_data)
-print("len_test = ", len_test)
-print("len_train = ", len_train)
 
-ds_train = ds[:, l_b:l_b + len_train, :]
-ds_test = ds[:, -(r_b + len_test):-r_b, :]
+def collect_indexes_by_target_value():
+    vals, counts = np.unique(targets, return_counts=True)
+    target_0_indexes = np.zeros(counts[0], dtype=int)
+    target_1_indexes = np.zeros(counts[1], dtype=int)
+    tmp_i, tmp_j = 0, 0
+    for k in range(0, len(targets)):
+        if (int(targets[k]) == int(vals[0])):
+            target_0_indexes[tmp_i] = k
+            tmp_i += 1
+        elif (int(targets[k]) == int(vals[1])):
+            target_1_indexes[tmp_j] = k
+            tmp_j += 1
+    return target_0_indexes, target_1_indexes
 
-print("ds: ", shape(ds))
-print("ds_train: ", shape(ds_train))
-print("ds_test: ", shape(ds_test))
+
+target_0_indexes, target_1_indexes = collect_indexes_by_target_value()
+np.random.shuffle(target_0_indexes)
+np.random.shuffle(target_1_indexes)
+
+print("targets: ", shape(targets))
+print("target_0_indexes: ", shape(target_0_indexes))
+print("target_1_indexes: ", shape(target_1_indexes))
+
+
+train_test_split = 0.75
+inbalance_f = int((len(target_1_indexes) / len(target_0_indexes)))
+target_0_indexes_train_len = int(train_test_split * len(target_0_indexes))
+target_0_indexes_train = np.tile(target_0_indexes[0:target_0_indexes_train_len], inbalance_f)
+target_0_indexes_test = np.tile(target_0_indexes[target_0_indexes_train_len:], inbalance_f)
+np.random.shuffle(target_0_indexes_train)
+np.random.shuffle(target_0_indexes_test)
+
+target_1_indexes_train_len = int(train_test_split * len(target_1_indexes))
+target_1_indexes_train = target_1_indexes[0:target_1_indexes_train_len]
+target_1_indexes_test = target_1_indexes[target_1_indexes_train_len:]
+print("target_0_indexes_train: ", shape(target_0_indexes_train))
+print("target_0_indexes_test: ", shape(target_0_indexes_test))
+
+print("target_1_indexes_train: ", shape(target_1_indexes_train))
+print("target_1_indexes_test: ", shape(target_1_indexes_test))
+
+indexes_train = np.concatenate((target_0_indexes_train, target_1_indexes_train), axis=0)
+indexes_test = np.concatenate((target_0_indexes_test, target_1_indexes_test), axis=0)
+np.random.shuffle(indexes_train)
+np.random.shuffle(indexes_test)
+
+print("indexes_train: ", shape(indexes_train))
+print("indexes_test: ", shape(indexes_test))
+
+print("indexes_train max: ", np.amax(indexes_train))
+print("indexes_train min: ", np.amin(indexes_train))
+print("indexes_test max: ", np.amax(indexes_test))
+print("indexes_test min: ", np.amin(indexes_test))
+
+
+def index_generator(indexes):
+    while True:
+        for j in indexes:
+            yield j
+
+
+train_index = index_generator(indexes=indexes_train)
+test_index = index_generator(indexes=indexes_test)
 
 
 def batch_generator_train(batch_size, rnn_sequence_length):
@@ -122,16 +173,18 @@ def batch_generator_train(batch_size, rnn_sequence_length):
         for i in range(batch_size):
             # Get a random start-index.
             # This points somewhere into the training-data.
-            idx = np.random.randint(len_train - (rnn_sequence_length + max_pred_step))
+            index = next(train_index)
+            l_b = cutFromHead + rnn_sequence_length + pred_step
+            idx = index + l_b - pred_step
             # This points somewhere into the augmented series range.
             idaugmnt = np.random.randint(agmntCount)
 
             # Copy the sequences of data starting at this index.
-            X1[i, :, :] = ds_train[idaugmnt, idx:idx + rnn_sequence_length, :]
-            X2[i, :] = ds_train[idaugmnt, idx + rnn_sequence_length - 1, :]
+            X1[i, :, :] = ds[idaugmnt, idx - rnn_sequence_length + 1: idx + 1, :]
+            X2[i, :] = ds[idaugmnt, idx, :]
 
-            Y1[i, 0] = ds_train[idaugmnt, idx + rnn_sequence_length - 1, 0]
-            Y2[i, 0] = ds_train[idaugmnt, idx + pred_step + rnn_sequence_length - 1, 6]
+            Y1[i, 0] = ds[idaugmnt, idx, 0]
+            Y2[i, 0] = ds[idaugmnt, idx + pred_step, 6]
         yield [X1, X2], [Y1, Y2]
 
 
@@ -152,16 +205,18 @@ def batch_generator_validation(batch_size, rnn_sequence_length):
         for i in range(batch_size):
             # Get a random start-index.
             # This points somewhere into the training-data.
-            idx = np.random.randint(len_test - (rnn_sequence_length + max_pred_step))
+            index = next(test_index)
+            l_b = cutFromHead + rnn_sequence_length + pred_step
+            idx = index + l_b - pred_step
             # This points somewhere into the augmented series range.
             idaugmnt = np.random.randint(agmntCount)
 
             # Copy the sequences of data starting at this index.
-            X1[i, :, :] = ds_test[idaugmnt, idx:idx + rnn_sequence_length, :]
-            X2[i, :] = ds_test[idaugmnt, idx + rnn_sequence_length - 1, :]
+            X1[i, :, :] = ds[idaugmnt, idx - rnn_sequence_length + 1: idx + 1, :]
+            X2[i, :] = ds[idaugmnt, idx, :]
 
-            Y1[i, 0] = ds_test[idaugmnt, idx + rnn_sequence_length, 0]
-            Y2[i, 0] = ds_test[idaugmnt, idx + pred_step + rnn_sequence_length - 1, 6]
+            Y1[i, 0] = ds[idaugmnt, idx, 0]
+            Y2[i, 0] = ds[idaugmnt, idx + pred_step, 6]
         yield [X1, X2], [Y1, Y2]
 
 
@@ -172,19 +227,25 @@ generator_validdata = batch_generator_validation(batch_size=batch_size, rnn_sequ
 # print(tmpX1[0, :, 0])
 # print(tmpY1[0, :, :])
 
+# for i in range(0, 2 * len(indexes_train)):
+#     [tmpX1, tmpX2], [tmpY1, tmpY2] = next(generator_traindata)
+#     print(i, np.amax(tmpX1), np.amax(tmpX2), np.amax(tmpY1), np.amax(tmpY1))
+#     # tmpX2[0, 0:6])
+#     # print(tmpY2[0])
+
 # ###################### Main #########################################
 
 recurrent_input = Input(shape=(rnn_sequence_length, 13), name='recurrent_input')
-rec_layer_1 = LSTM(74, return_sequences=True)(recurrent_input)
-rec_layer_2 = LSTM(50)(rec_layer_1)
+rec_layer_1 = LSTM(150, return_sequences=True)(recurrent_input)
+rec_layer_2 = LSTM(64)(rec_layer_1)
 recurrent_output = Dense(1, activation='tanh', name='recurrent_output')(rec_layer_2)
 
 sequential_input = Input(shape=(13,), name='sequential_input')
 x = keras.layers.concatenate([rec_layer_2, sequential_input])
 
+x = Dense(128, activation='tanh')(x)
 x = Dense(64, activation='tanh')(x)
-x = Dense(64, activation='tanh')(x)
-x = Dense(64, activation='tanh')(x)
+x = Dense(32, activation='tanh')(x)
 
 main_output = Dense(1, activation='sigmoid', name='main_output')(x)
 model = Model(inputs=[recurrent_input, sequential_input], outputs=[recurrent_output, main_output])
@@ -206,8 +267,8 @@ except Exception as error:
     print("Error trying to load checkpoint.")
     print(error)
 
-steps_per_epoch = int((len_train - rnn_sequence_length) * agmntCount / batch_size)
-validation_steps = int((len_test - rnn_sequence_length) * agmntCount / batch_size)
+steps_per_epoch = int(len(indexes_train) * agmntCount * 0.25 / batch_size)
+validation_steps = int(len(indexes_test) * agmntCount * 0.25 / batch_size)
 print("steps_per_epoch = ", steps_per_epoch)
 print("validation_steps = ", validation_steps)
 
@@ -226,4 +287,4 @@ for check_index in range(0, 1):
     [pred1, pred2] = model.predict({'recurrent_input': tmpX1, 'sequential_input': tmpX2})
     print('true vs pred:', file=f)
     for line in range(0, batch_size):
-        print(tmpY2[line, 0], pred2[line, 0], sep=',', file=f)
+        print(tmpY2[line, 0], pred2[line, 0], file=f)

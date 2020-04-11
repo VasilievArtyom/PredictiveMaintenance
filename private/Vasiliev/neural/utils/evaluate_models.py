@@ -113,14 +113,16 @@ def get_ground_true_by_timestamp(_n, _blc_id, _pred_step):
 
 # ################# model difinition #########################################
 recurrent_input = Input(shape=(rnn_sequence_length, 13), name='recurrent_input')
-rec_layer_1 = LSTM(74, return_sequences=True)(recurrent_input)
-rec_layer_2 = LSTM(50)(rec_layer_1)
+rec_layer_1 = LSTM(150, return_sequences=True)(recurrent_input)
+rec_layer_2 = LSTM(64)(rec_layer_1)
 recurrent_output = Dense(1, activation='tanh', name='recurrent_output')(rec_layer_2)
+
 sequential_input = Input(shape=(13,), name='sequential_input')
 x = keras.layers.concatenate([rec_layer_2, sequential_input])
+
+x = Dense(128, activation='tanh')(x)
 x = Dense(64, activation='tanh')(x)
-x = Dense(64, activation='tanh')(x)
-x = Dense(64, activation='tanh')(x)
+x = Dense(32, activation='tanh')(x)
 main_output = Dense(1, activation='sigmoid', name='main_output')(x)
 model = Model(inputs=[recurrent_input, sequential_input], outputs=[recurrent_output, main_output])
 plot_model(model, to_file='model.png', show_shapes=True)
