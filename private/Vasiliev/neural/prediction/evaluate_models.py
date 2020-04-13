@@ -173,7 +173,7 @@ max_tmstmp = np.amax(N) + 1
 min_tmpstmp = max_tmstmp - 250
 print(min_tmpstmp, max_tmstmp)
 
-for pred_step in range(1, 22):
+for pred_step in range(21, 22):
     f = open((str(blc_id) + '_binary_on_' + str(pred_step) + ".csv"), 'w+')
     print("N,GT,predict", file=f)
     for tmstmp in range(min_tmpstmp, max_tmstmp):

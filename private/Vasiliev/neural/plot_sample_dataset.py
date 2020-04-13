@@ -12,7 +12,7 @@ plt.rc('text', usetex=True)
 inpath = "data/"
 outpath = ""
 
-currentfile = "data_T_664.csv"
+currentfile = "data_T_0.csv"
 
 # Read from file
 strdatatype = np.dtype([('N', np.int_), ('Mode', np.float_, (5,)),
@@ -29,11 +29,11 @@ strdatatype = np.dtype([('N', np.int_), ('Mode', np.float_, (5,)),
     ma13T, ma55T, ma144T, S, lfc) = np.loadtxt(path.join(inpath, currentfile),
                                                unpack=True, delimiter=';', skiprows=1, dtype=strdatatype)
 
-B_n_labels = [r'$T^{(0)}$', r'$T^{(1)}$', r'$T^{(2)}$', r'$T^{(3)}$', r'$T^{(4)}$', r'$T^{(5)}$', r'$T^{(6)}$', r'$T^{(7)}$', r'$T^{(8)}$', r'$T^{(9)}$']
+B_n_labels = [r'$B^{(0)}$', r'$B^{(1)}$', r'$B^{(2)}$', r'$B^{(3)}$', r'$B^{(4)}$', r'$B^{(5)}$', r'$B^{(6)}$', r'$B^{(7)}$', r'$B^{(8)}$', r'$B^{(9)}$']
 print_last_tmstms = -0
-fontsize = 13
+fontsize = 11
 blc_id = 0
-fig, ax = plt.subplots(nrows=13, ncols=1, constrained_layout=True, figsize=(10, 15))
+fig, ax = plt.subplots(nrows=13, ncols=1, constrained_layout=True, figsize=(14, 14))
 
 for r_index in range(0, 13):
     ax[r_index].grid(b=True, which='both')
